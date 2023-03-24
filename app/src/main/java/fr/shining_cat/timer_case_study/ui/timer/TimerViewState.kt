@@ -22,7 +22,7 @@ sealed class TimerViewState {
         val countDown: CountDown? = null
     ) : TimerViewState()
 
-    data class Finished(val totalDuration: String) : TimerViewState()
+    data class Finished(val expectedDuration: String, val realDuration: String, val drift: String) : TimerViewState()
 
     data class Error(val errorCode: String) : TimerViewState()
 }

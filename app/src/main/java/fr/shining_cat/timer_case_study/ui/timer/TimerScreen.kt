@@ -7,6 +7,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -17,9 +18,15 @@ fun TimerScreen(
 ) {
     val screenViewState = viewModel.screenViewState.collectAsState().value
     //
-    Column(Modifier.padding(64.dp).fillMaxSize()) {
+    Column(
+        Modifier
+            .padding(64.dp)
+            .fillMaxSize()
+    ) {
         Row(
-            Modifier.fillMaxWidth(),
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = 64.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Button(onClick = { viewModel.startUseCaseTimerV2() }) {
@@ -30,9 +37,16 @@ fun TimerScreen(
             }
         }
         when (screenViewState) {
-            TimerViewState.Loading -> CircularProgressIndicator()
+            TimerViewState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
             is TimerViewState.Error -> Text("whoups error ${screenViewState.errorCode}")
-            is TimerViewState.Finished -> Text("Finished! total = ${screenViewState.totalDuration}")
+            is TimerViewState.Finished -> Text("Finished! total = ${screenViewState.expectedDuration}")
             is TimerViewState.InitialCountDown -> CountDownComponent(
                 screenViewState.countDown.secondsDisplay,
                 screenViewState.countDown.progress
@@ -80,7 +94,6 @@ fun StepComponent(
         }
     }
 }
-
 
 @Composable
 fun CountDownComponent(

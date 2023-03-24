@@ -7,7 +7,6 @@ import fr.shining_cat.timer_case_study.di.DefaultDispatcher
 import fr.shining_cat.timer_case_study.domain.models.StepTimerState
 import fr.shining_cat.timer_case_study.domain.models.TimerSession
 import fr.shining_cat.timer_case_study.domain.models.TimerSessionStep.RestStep
-import fr.shining_cat.timer_case_study.domain.models.TimerSessionStep.WorkStep
 import fr.shining_cat.timer_case_study.domain.usecases.StepTimerUseCase
 import fr.shining_cat.timer_case_study.domain.usecases.StepTimerUseCaseV1
 import fr.shining_cat.timer_case_study.domain.usecases.StepTimerUseCaseV2
@@ -40,11 +39,13 @@ class TimerSateViewModel @Inject constructor(
 
     // drift analysis:
     private var sessionStartTimestamp = 0L
+
     private data class DriftAnalysis(
         val step: String,
         val elapsedTimeSincePrevious: Long,
         val elapsedTimeSinceStart: Long
     )
+
     private val analysis = mutableListOf<DriftAnalysis>()
     private fun logDriftAnalysis(step: String) {
         val elapsedTotal = System.currentTimeMillis() - sessionStartTimestamp
@@ -57,7 +58,6 @@ class TimerSateViewModel @Inject constructor(
             )
         )
     }
-
 
     fun startUseCaseTimerV1() {
         sessionStartTimestamp = System.currentTimeMillis()
@@ -94,19 +94,16 @@ class TimerSateViewModel @Inject constructor(
             } else {
                 //session is not finished, increment step index and continue
                 //we don't emit any state here as we expect the next step's first state to be emitted immediately
-                //logDriftAnalysis("tick::STEP ended")
                 currentSessionStepIndex += 1
                 launchSessionStep(stepTimerUseCase)
             }
         } else {//build running step state and emit
             viewModelScope.launch {
-                //logDriftAnalysis("tick::normal ticking - mapper.buildState START")
                 val currentState = mapper.buildState(
                     session = session,
                     currentSessionStepIndex = currentSessionStepIndex,
                     currentState = stepTimerState
                 )
-                //logDriftAnalysis("tick::normal ticking - mapper.buildState END -> viewstate emission")
                 _screenViewState.emit(currentState)
             }
         }
@@ -115,47 +112,23 @@ class TimerSateViewModel @Inject constructor(
     private fun emitSessionEndState() {
         viewModelScope.launch {
             val totalElapsedTimeMs = (System.currentTimeMillis() - sessionStartTimestamp)
-            hiitLogger.d(
-                "TimerSateViewModel",
-                "emitSessionEndState::drift = ${
-                    totalElapsedTimeMs - session.durationSeconds.times(
-                        1000L
-                    )
-                }"
-            )
+            val drift = totalElapsedTimeMs - session.durationSeconds
+            hiitLogger.d("TimerSateViewModel", "emitSessionEndState::DRIFT = $drift")
             if (session.steps.last() is RestStep) {
                 //not counting the last Rest step for aborted session as it doesn't make much sense:
                 currentSessionStepIndex -= 1
             }
-            val restStepsDone = session.steps
-                .take(currentSessionStepIndex + 1) // we want to include the last step
-                .filterIsInstance<RestStep>()
-            val workingStepsDone = session.steps
-                .take(currentSessionStepIndex + 1) // we want to include the last step
-                .filterIsInstance<WorkStep>()
-            val actualSessionLength =
-                if (restStepsDone.isNotEmpty() && workingStepsDone.isNotEmpty()) {
-                    restStepsDone.size.times(restStepsDone[0].durationSeconds).plus(
-                        workingStepsDone.size.times(workingStepsDone[0].durationSeconds)
-                    )
-                } else 0L
-            hiitLogger.d(
-                "TimerSateViewModel",
-                "emitSessionEndState::workingStepsDone = ${workingStepsDone.size} | restStepsDone = ${restStepsDone.size} | total steps = ${workingStepsDone.size + restStepsDone.size}"
-            )
-            hiitLogger.d(
-                "TimerSateViewModel",
-                "emitSessionEndState::actualSessionLength = $actualSessionLength"
-            )
-            val actualSessionLengthFormatted = "${actualSessionLength}s"
-            //logDriftAnalysis("emitSessionEndState END -> viewstate emission")
             _screenViewState.emit(
-                TimerViewState.Finished(totalDuration = actualSessionLengthFormatted)
+                TimerViewState.Finished(
+                    expectedDuration = "${session.durationSeconds}s",
+                    realDuration = "${totalElapsedTimeMs}Ms",
+                    drift = "${drift}Ms",
+                )
             )
-            for (drift in analysis) {
+            for (driftLogged in analysis) {
                 hiitLogger.d(
                     "TimerSateViewModel",
-                    "time since previous log: ${drift.elapsedTimeSincePrevious} - time since start : ${drift.elapsedTimeSinceStart}  -  ${drift.step}"
+                    "time since previous log: ${driftLogged.elapsedTimeSincePrevious} - time since start : ${driftLogged.elapsedTimeSinceStart}  -  ${driftLogged.step}"
                 )
             }
         }
