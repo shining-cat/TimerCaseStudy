@@ -4,8 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import fr.shining_cat.timer_case_study.Screen
-import fr.shining_cat.timer_case_study.ui.timersate.TimerScreen
+import fr.shining_cat.timer_case_study.ui.timer.TimerScreen
 
 @Composable
 fun MainNavigation() {
@@ -15,6 +14,6 @@ fun MainNavigation() {
         navController = navController,
         startDestination = Screen.Home.route
     ) {
-        composable(route = Screen.Home.route) {TimerScreen(navController)}
+        composable(route = Screen.Home.route) {TimerScreen()}
     }
 }
