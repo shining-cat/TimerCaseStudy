@@ -5,6 +5,6 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface StepTimerUseCase {
 
-    abstract val timerStateFlow: StateFlow<StepTimerState>
-    abstract suspend fun start(totalSeconds: Int)
+    val timerStateFlow: StateFlow<StepTimerState>
+    suspend fun start(totalSeconds: Int)
 }

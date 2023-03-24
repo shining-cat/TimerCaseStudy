@@ -17,6 +17,8 @@ hilt = "2.45"
 junit = "4.13.2"
 kotlin = "1.8.10"
 ksp = "1.8.10-1.0.9"
+mockk = "1.13.3"
+jupiter = "5.9.0"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
@@ -45,6 +47,8 @@ hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hil
 hilt-gradle-plugin = { module = "com.google.dagger:hilt-android-gradle-plugin", version.ref = "hilt" }
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+mockk = {module = "io.mockk:mockk", version.ref = "mockk" }
+jupiter = {module = "org.junit.jupiter:junit-jupiter", version.ref = "jupiter"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }

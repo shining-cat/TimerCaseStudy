@@ -46,7 +46,7 @@ class StepTimerUseCaseV1 @Inject constructor(
             .transform { remainingSeconds: Int ->
                 val now = System.currentTimeMillis()
                 hiitLogger.d(
-                    "StepTimerUseCaseV2",
+                    "StepTimerUseCaseV1",
                     "TICKING: remainingSeconds = $remainingSeconds | tick length = ${now - loggingTimestamp} | time since step start: ${System.currentTimeMillis() - stepStartTimeStamp}"
                 )
                 loggingTimestamp = now
