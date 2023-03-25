@@ -6,7 +6,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.shining_cat.timer_case_study.di.DefaultDispatcher
 import fr.shining_cat.timer_case_study.domain.models.StepTimerState
 import fr.shining_cat.timer_case_study.domain.models.TimerSession
-import fr.shining_cat.timer_case_study.domain.models.TimerSessionStep.RestStep
 import fr.shining_cat.timer_case_study.domain.usecases.StepTimerUseCase
 import fr.shining_cat.timer_case_study.domain.usecases.StepTimerUseCaseV1
 import fr.shining_cat.timer_case_study.domain.usecases.StepTimerUseCaseV2
@@ -87,7 +86,7 @@ class TimerSateViewModel @Inject constructor(
         val currentStep = session.steps[currentSessionStepIndex]
         val remainingSeconds = stepTimerState.secondsRemaining
         logDriftAnalysis("remainingSeconds = $remainingSeconds TICK ${currentStep::class.java.simpleName}")
-        hiitLogger.d("TimerSateViewModel","tick: remainingSeconds = ${remainingSeconds} ")
+        hiitLogger.d("TimerSateViewModel", "tick: remainingSeconds = ${remainingSeconds} ")
         if (remainingSeconds == 0) {//step end
             stepTimerJob?.cancel()
             if (session.steps.lastOrNull() == currentStep) {
@@ -112,14 +111,15 @@ class TimerSateViewModel @Inject constructor(
 
     private fun emitSessionEndState() {
         viewModelScope.launch {
+            stepTimerJob?.cancel() // needed for the "whole session" case
             val totalElapsedTimeMs = (System.currentTimeMillis() - sessionStartTimestamp)
-            val drift = totalElapsedTimeMs - session.durationSeconds
+            val drift = totalElapsedTimeMs - session.durationSeconds.times(1000)
             hiitLogger.d("TimerSateViewModel", "emitSessionEndState::DRIFT = ${drift}ms")
             _screenViewState.emit(
                 TimerViewState.Finished(
                     expectedDuration = "${session.durationSeconds}s",
-                    realDuration = "${totalElapsedTimeMs}Ms",
-                    drift = "${drift}Ms",
+                    realDuration = "${totalElapsedTimeMs}ms",
+                    drift = "${drift}ms",
                 )
             )
             for (driftLogged in analysis) {
@@ -141,6 +141,65 @@ class TimerSateViewModel @Inject constructor(
         }
     }
 
+    /////////////////////////////////////////
+    fun startUseCaseTimerV1WholeSession() {
+        sessionStartTimestamp = System.currentTimeMillis()
+        logDriftAnalysis("startViewModelTimer")
+        setupWholeTicker(stepTimerUseCaseV1)
+        launchWholeSession(stepTimerUseCaseV1)
+    }
+
+    private fun setupWholeTicker(stepTimerUseCase: StepTimerUseCase) {
+        viewModelScope.launch {
+            stepTimerUseCase.timerStateFlow.collect() { stepTimerState ->
+                if (stepTimerState != StepTimerState()) { //excluding first emission with default value
+                    tickWhole(stepTimerState = stepTimerState)
+                }
+            }
+        }
+    }
+
+    private fun launchWholeSession(stepTimerUseCase: StepTimerUseCase) {
+        val stepToStart = session.steps.first()
+        logDriftAnalysis("launchSessionStep START ${stepToStart::class.java.simpleName}")
+        val wholeSessionDuration = session.durationSeconds
+        stepTimerJob = viewModelScope.launch {
+            //logDriftAnalysis("launchSessionStep::stepTimerUseCase.start")
+            stepTimerUseCase.start(wholeSessionDuration)
+        }
+    }
+
+    private fun tickWhole(stepTimerState: StepTimerState) {
+        val currentStep = session.steps[currentSessionStepIndex]
+        val sessionRemainingSeconds = stepTimerState.secondsRemaining
+        logDriftAnalysis("remainingSeconds = $sessionRemainingSeconds TICK ${currentStep::class.java.simpleName}")
+        hiitLogger.d("TimerSateViewModel", "tickWhole: remainingSeconds = ${sessionRemainingSeconds} ")
+        if (sessionRemainingSeconds == 0) {//whole session end
+            if (session.steps.lastOrNull() == currentStep) {
+                hiitLogger.d("TimerSateViewModel", "tickWhole: SESSION FINISHED, current step is LAST")
+                emitSessionEndState()
+            } else {
+                hiitLogger.e("TimerSateViewModel", "tickWhole: SESSION FINISHED, current step is NOT LAST")
+            }
+        } else {//build current running step state and emit
+            val timeRemainingTriggerNextStep = currentStep.remainingSessionDurationSecondsAfterMe
+            if(sessionRemainingSeconds <= timeRemainingTriggerNextStep){
+                hiitLogger.d("TimerSateViewModel", "tickWhole: step ${currentStep} has ended, incrementing currentSessionStepIndex")
+                currentSessionStepIndex += 1
+            }
+            viewModelScope.launch {
+                val currentState = mapper.buildStateWholeSession(
+                    session = session,
+                    currentSessionStepIndex = currentSessionStepIndex,
+                    currentState = stepTimerState
+                )
+                _screenViewState.emit(currentState)
+            }
+        }
+    }
+
+
+    /////////////////////////////////////////
     override fun onCleared() {
         super.onCleared()
         stepTimerJob?.cancel()

@@ -60,4 +60,49 @@ class TimerSessionMapper @Inject constructor(
             }
         }
     }
+
+    suspend fun buildStateWholeSession(
+        session: TimerSession,
+        currentSessionStepIndex: Int,
+        currentState: StepTimerState
+    ): TimerViewState {
+        return withContext(defaultDispatcher) {
+            val currentStep = session.steps[currentSessionStepIndex]
+            val stepRemainingSeconds = currentState.secondsRemaining.minus(currentStep.remainingSessionDurationSecondsAfterMe)
+            val stepRemainingPercentage = stepRemainingSeconds.div(currentStep.durationSeconds.toFloat())
+            val stepRemainingSecondsString = "${stepRemainingSeconds}s"
+            val countdownS = currentStep.countDownLengthSeconds
+            val countDown = if (stepRemainingSeconds <= countdownS) {
+                CountDown(
+                    secondsDisplay = "${stepRemainingSeconds}s",
+                    progress = stepRemainingSeconds.div(countdownS.toFloat())
+                )
+            } else null
+            val sessionRemainingSeconds = currentState.secondsRemaining
+            val sessionRemainingSecondsString = "${sessionRemainingSeconds}s"
+            when (currentStep) {
+                is TimerSessionStep.WorkStep -> TimerViewState.WorkNominal(
+                    stepRemainingTime = stepRemainingSecondsString,
+                    stepProgress = stepRemainingPercentage,
+                    totalRemainingTime = sessionRemainingSecondsString,
+                    totalProgress = currentState.remainingPercentage,
+                    countDown = countDown,
+                )
+                is TimerSessionStep.RestStep -> TimerViewState.RestNominal(
+                    stepRemainingTime = stepRemainingSecondsString,
+                    stepProgress = stepRemainingPercentage,
+                    totalRemainingTime = sessionRemainingSecondsString,
+                    totalProgress = currentState.remainingPercentage,
+                    countDown = countDown,
+                )
+                is TimerSessionStep.PrepareStep -> {
+                    if (countDown == null) {
+                        TimerViewState.Error("LAUNCH_SESSION")
+                    } else {
+                        TimerViewState.InitialCountDown(countDown = countDown)
+                    }
+                }
+            }
+        }
+    }
 }

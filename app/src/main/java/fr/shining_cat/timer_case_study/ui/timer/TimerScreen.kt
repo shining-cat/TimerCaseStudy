@@ -23,19 +23,16 @@ fun TimerScreen(
             .padding(64.dp)
             .fillMaxSize()
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(bottom = 64.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(onClick = { viewModel.startUseCaseTimerV1() }) {
-                Text(text = "launch V1")
-            }
-            Button(onClick = { viewModel.startUseCaseTimerV2() }) {
-                Text(text = "launch V2")
-            }
+        Button(onClick = { viewModel.startUseCaseTimerV1() }) {
+            Text(text = "launch V1")
         }
+        Button(onClick = { viewModel.startUseCaseTimerV2() }) {
+            Text(text = "launch V2")
+        }
+        Button(onClick = { viewModel.startUseCaseTimerV1WholeSession() }) {
+            Text(text = "launch V1 whole session")
+        }
+        Spacer(modifier = Modifier.height(64.dp))
         when (screenViewState) {
             TimerViewState.Loading -> {
                 Box(
@@ -46,7 +43,7 @@ fun TimerScreen(
                 }
             }
             is TimerViewState.Error -> Text("whoups error ${screenViewState.errorCode}")
-            is TimerViewState.Finished -> Text("Finished! total = ${screenViewState.expectedDuration} - real duration = ${screenViewState.realDuration} - drift = ${screenViewState.drift}ms")
+            is TimerViewState.Finished -> Text("Finished! total = ${screenViewState.expectedDuration} - real duration = ${screenViewState.realDuration} - drift = ${screenViewState.drift}")
             is TimerViewState.InitialCountDown -> CountDownComponent(
                 screenViewState.countDown.secondsDisplay,
                 screenViewState.countDown.progress
