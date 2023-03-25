@@ -115,10 +115,6 @@ class TimerSateViewModel @Inject constructor(
             val totalElapsedTimeMs = (System.currentTimeMillis() - sessionStartTimestamp)
             val drift = totalElapsedTimeMs - session.durationSeconds
             hiitLogger.d("TimerSateViewModel", "emitSessionEndState::DRIFT = ${drift}ms")
-            if (session.steps.last() is RestStep) {
-                //not counting the last Rest step for aborted session as it doesn't make much sense:
-                currentSessionStepIndex -= 1
-            }
             _screenViewState.emit(
                 TimerViewState.Finished(
                     expectedDuration = "${session.durationSeconds}s",

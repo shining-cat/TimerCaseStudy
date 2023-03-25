@@ -46,7 +46,7 @@ fun TimerScreen(
                 }
             }
             is TimerViewState.Error -> Text("whoups error ${screenViewState.errorCode}")
-            is TimerViewState.Finished -> Text("Finished! total = ${screenViewState.expectedDuration}")
+            is TimerViewState.Finished -> Text("Finished! total = ${screenViewState.expectedDuration} - real duration = ${screenViewState.realDuration} - drift = ${screenViewState.drift}ms")
             is TimerViewState.InitialCountDown -> CountDownComponent(
                 screenViewState.countDown.secondsDisplay,
                 screenViewState.countDown.progress
