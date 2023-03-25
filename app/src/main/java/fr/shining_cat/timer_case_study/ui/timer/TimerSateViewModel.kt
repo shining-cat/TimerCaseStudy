@@ -32,7 +32,7 @@ class TimerSateViewModel @Inject constructor(
     val screenViewState = _screenViewState.asStateFlow()
 
     //
-    private var session: TimerSession = TestTimerSessionProvider().getTestTimerSession()
+    private var session: TimerSession = TestTimerSessionProvider().getTestTimerSessionShort()
     private var currentSessionStepIndex = 0
     private var stepTimerJob: Job? = null
 
@@ -142,7 +142,14 @@ class TimerSateViewModel @Inject constructor(
     }
 
     /////////////////////////////////////////
-    fun startUseCaseTimerV1WholeSession() {
+    fun startUseCaseTimerV1WholeSessionShort() {
+        sessionStartTimestamp = System.currentTimeMillis()
+        logDriftAnalysis("startViewModelTimer")
+        setupWholeTicker(stepTimerUseCaseV1)
+        launchWholeSession(stepTimerUseCaseV1)
+    }
+    fun startUseCaseTimerV1WholeSessionLong() {
+        session = TestTimerSessionProvider().getTestTimerSessionLong()
         sessionStartTimestamp = System.currentTimeMillis()
         logDriftAnalysis("startViewModelTimer")
         setupWholeTicker(stepTimerUseCaseV1)

@@ -97,6 +97,7 @@ class TimerSessionMapper @Inject constructor(
                 )
                 is TimerSessionStep.PrepareStep -> {
                     if (countDown == null) {
+                        hiitLogger.e("TimerSessionMapper", "buildStateWholeSession::currentStep = $currentStep")
                         TimerViewState.Error("LAUNCH_SESSION")
                     } else {
                         TimerViewState.InitialCountDown(countDown = countDown)
