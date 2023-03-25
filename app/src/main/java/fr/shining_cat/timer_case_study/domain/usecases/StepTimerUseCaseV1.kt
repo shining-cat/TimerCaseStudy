@@ -1,6 +1,6 @@
 package fr.shining_cat.timer_case_study.domain.usecases
 
-import fr.shining_cat.timer_case_study.di.DefaultDispatcher
+import fr.shining_cat.timer_case_study.di.TimerDispatcher
 import fr.shining_cat.timer_case_study.domain.models.StepTimerState
 import fr.shining_cat.timer_case_study.utils.HiitLogger
 import kotlinx.coroutines.CoroutineDispatcher
@@ -10,7 +10,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class StepTimerUseCaseV1 @Inject constructor(
-    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
+    @TimerDispatcher private val timerDispatcher: CoroutineDispatcher,
     private val hiitLogger: HiitLogger
 ) : StepTimerUseCase {
 
@@ -21,10 +21,10 @@ class StepTimerUseCaseV1 @Inject constructor(
     private var stepStartTimeStamp = 0L
 
     override suspend fun start(totalSeconds: Int) {
-        hiitLogger.d("StepTimerUseCaseV1", "-------------- START --------------")
+        hiitLogger.d("StepTimerUseCaseV1", "-------------- START for $totalSeconds seconds--------------")
         stepStartTimeStamp = System.currentTimeMillis()
         loggingTimestamp = System.currentTimeMillis()
-        return withContext(defaultDispatcher) {
+        return withContext(timerDispatcher) {
             initTimer(totalSeconds)
                 .collect {
                     hiitLogger.d(
@@ -52,4 +52,5 @@ class StepTimerUseCaseV1 @Inject constructor(
                 loggingTimestamp = now
                 emit(StepTimerState(remainingSeconds, totalSeconds))
             }
+            .flowOn(timerDispatcher)//actually ensure the operation will flow on the provided dispatcher. This mostly allows testing the usecase by manipulating it
 }

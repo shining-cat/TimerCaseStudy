@@ -29,7 +29,7 @@ fun TimerScreen(
                 .padding(bottom = 64.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Button(onClick = { viewModel.startUseCaseTimerV2() }) {
+            Button(onClick = { viewModel.startUseCaseTimerV1() }) {
                 Text(text = "launch V1")
             }
             Button(onClick = { viewModel.startUseCaseTimerV2() }) {

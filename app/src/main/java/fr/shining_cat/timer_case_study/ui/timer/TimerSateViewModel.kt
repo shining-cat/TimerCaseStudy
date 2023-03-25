@@ -85,8 +85,9 @@ class TimerSateViewModel @Inject constructor(
 
     private fun tick(stepTimerUseCase: StepTimerUseCase, stepTimerState: StepTimerState) {
         val currentStep = session.steps[currentSessionStepIndex]
-        logDriftAnalysis("tick currentStep: ${currentStep::class.java.simpleName}")
         val remainingSeconds = stepTimerState.secondsRemaining
+        logDriftAnalysis("remainingSeconds = $remainingSeconds TICK ${currentStep::class.java.simpleName}")
+        hiitLogger.d("TimerSateViewModel","tick: remainingSeconds = ${remainingSeconds} ")
         if (remainingSeconds == 0) {//step end
             stepTimerJob?.cancel()
             if (session.steps.lastOrNull() == currentStep) {
@@ -113,7 +114,7 @@ class TimerSateViewModel @Inject constructor(
         viewModelScope.launch {
             val totalElapsedTimeMs = (System.currentTimeMillis() - sessionStartTimestamp)
             val drift = totalElapsedTimeMs - session.durationSeconds
-            hiitLogger.d("TimerSateViewModel", "emitSessionEndState::DRIFT = $drift")
+            hiitLogger.d("TimerSateViewModel", "emitSessionEndState::DRIFT = ${drift}ms")
             if (session.steps.last() is RestStep) {
                 //not counting the last Rest step for aborted session as it doesn't make much sense:
                 currentSessionStepIndex -= 1

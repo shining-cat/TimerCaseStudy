@@ -2,7 +2,7 @@ package fr.shining_cat.timer_case_study.domain.usecase
 
 import fr.shining_cat.timer_case_study.AbstractMockkTest
 import fr.shining_cat.timer_case_study.domain.models.StepTimerState
-import fr.shining_cat.timer_case_study.domain.usecases.StepTimerUseCaseV1
+import fr.shining_cat.timer_case_study.domain.usecases.StepTimerUseCaseV2
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -14,12 +14,13 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class StepTimerUseCaseV1Test : AbstractMockkTest() {
+internal class StepTimerUseCaseV2Test : AbstractMockkTest() {
 
     @Test
     fun `timer runs for expected duration and emits expected states in order`() = runTest {
+
         val testDispatcher = StandardTestDispatcher(testScheduler)
-        val testedUseCase = StepTimerUseCaseV1(testDispatcher, mockHiitLogger)
+        val testedUseCase = StepTimerUseCaseV2(testDispatcher, mockHiitLogger)
         val stepTimerStatesAsList = mutableListOf<StepTimerState>()
         val collectJob = launch(UnconfinedTestDispatcher()) {
             testedUseCase.timerStateFlow.toList(stepTimerStatesAsList)
@@ -29,7 +30,7 @@ internal class StepTimerUseCaseV1Test : AbstractMockkTest() {
         //this is the ticking value used in the StepTimer: 1s
         val stepTimer = 1000L
         //this is the delay we wait to check the state emitted by the StepTimer's "onStart", it needs to be taken into account in the following steps check too
-        val firstCheckDelay = 1L
+        val firstCheckDelay = 500L
         //launching:
         launch {
             testedUseCase.start(totalSeconds)
@@ -50,20 +51,20 @@ internal class StepTimerUseCaseV1Test : AbstractMockkTest() {
         for (tick in 1..totalSeconds) {
             // check step initial conditions:
             val actualEmittedStatesCountBeforeAdvance = stepTimerStatesAsList.size
-            println("test virtual time loop START = $currentTime | lastState emitted = ${stepTimerStatesAsList.last()} | actualEmittedStatesCountBeforeAdvance = $actualEmittedStatesCountBeforeAdvance")
-            val expectedEmittedStatesCountBeforeAdvance =
-                tick.plus(1) //this will start the whole loop with 2: the default initial and the start one
+            //this will start the whole loop with 1: the default initial
+            val expectedEmittedStatesCountBeforeAdvance = tick.plus(1)
             assertEquals(
                 expectedEmittedStatesCountBeforeAdvance,
                 actualEmittedStatesCountBeforeAdvance
             )
+            println("test virtual time loop START = $currentTime | lastState emitted = ${stepTimerStatesAsList.last()} | actualEmittedStatesCountBeforeAdvance = $actualEmittedStatesCountBeforeAdvance")
             // advance virtual time by stepTimer
             testDispatcher.scheduler.advanceTimeBy(stepTimer)
             // check resulting emissions
             val actualEmittedStatesCountAfterAdvance = stepTimerStatesAsList.size
-            val expectedEmittedStatesCountAfterAdvance =
-                tick.plus(2)//now we should have 1 more, the one emitted by advancing time by stepTimer
-            println("test virtual time loop middle = $currentTime | lastState emitted = ${stepTimerStatesAsList.last()} | emittedStatesCountAfterAdvance = $actualEmittedStatesCountAfterAdvance")
+            //now we should have 1 more state emitted, the one emitted by advancing time by stepTimer
+            val expectedEmittedStatesCountAfterAdvance = tick.plus(2)
+            println("test virtual time loop MIDDLE = $currentTime | lastState emitted = ${stepTimerStatesAsList.last()} | emittedStatesCountAfterAdvance = $actualEmittedStatesCountAfterAdvance")
             assertEquals(
                 expectedEmittedStatesCountAfterAdvance,
                 actualEmittedStatesCountAfterAdvance
@@ -73,7 +74,7 @@ internal class StepTimerUseCaseV1Test : AbstractMockkTest() {
             val expectedTickState = StepTimerState(expectedRemainingTime, totalSeconds)
             assertEquals(expectedTickState, emittedState)
             //
-            val expectedElapsedVirtualTime = tick.times(stepTimer).plus(firstCheckDelay)
+            val expectedElapsedVirtualTime = firstCheckDelay.plus(tick.times(stepTimer))
             assertEquals(expectedElapsedVirtualTime, currentTime)
         }
         val expectedTotalVirtualTime = totalSeconds.times(stepTimer).plus(firstCheckDelay)

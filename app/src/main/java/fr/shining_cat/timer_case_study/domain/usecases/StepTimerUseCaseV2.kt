@@ -22,7 +22,7 @@ class StepTimerUseCaseV2 @Inject constructor(
 
     override suspend fun start(totalSeconds: Int) {
         stepStartTimeStamp = System.currentTimeMillis()
-        hiitLogger.d("StepTimerUseCaseV2", "-------------- START --------------")
+        hiitLogger.d("StepTimerUseCaseV2", "-------------- START for $totalSeconds seconds--------------")
         return withContext(timerDispatcher) {
             loggingTimestamp = System.currentTimeMillis()
             initTimer(totalSeconds)
@@ -42,13 +42,13 @@ class StepTimerUseCaseV2 @Inject constructor(
     private fun initTimer(totalSeconds: Int): Flow<StepTimerState> =
         ((totalSeconds - 1).times(timerHeartBeatRatio) downTo 0).asFlow() // first emit total - 1 because the total is emitted by onStart
             .onEach { delay(oneSecondAsMs.div(timerHeartBeatRatio)) } // internal heartbeat of 1ms
+            .conflate() // In case the operation in onTransform takes some time, conflate keeps the time ticking separately
+            .onEach { delay(oneSecondAsMs) }//only collect and reemit every second
             .onStart {
                 emit(totalSeconds.times(timerHeartBeatRatio))
             } // Emit total seconds immediately, without waiting the specified delay in onEach
-            .conflate() // In case the operation in onTransform takes some time, conflate keeps the time ticking separately
-            .onEach { delay(oneSecondAsMs) }//only collect and reemit every second
             .transform { remainingHeartBeats: Int ->
-                val remainingSeconds = remainingHeartBeats.div(timerHeartBeatRatio.toFloat())
+                val remainingSeconds = remainingHeartBeats.div(timerHeartBeatRatio.toFloat()) //very first emission will be totalSeconds.times(timerHeartBeatRatio).div(timerHeartBeatRatio.toFloat()) = totalSeconds
                     .toInt() // this rounding will hopefully correct for the drift?
                 val now = System.currentTimeMillis()
                 hiitLogger.d(
