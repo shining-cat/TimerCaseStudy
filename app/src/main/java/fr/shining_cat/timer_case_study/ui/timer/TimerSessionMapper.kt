@@ -33,7 +33,6 @@ class TimerSessionMapper @Inject constructor(
             val stepRemainingSecondsString = "${stepRemainingSeconds}s"
             val sessionRemainingSeconds = stepRemainingSeconds + currentStep.remainingSessionDurationSecondsAfterMe
             val sessionRemainingSecondsString = "${sessionRemainingSeconds}s"
-              
             val sessionRemainingPercentage = sessionRemainingSeconds.div(session.durationSeconds.toFloat())
             when (currentStep) {
                 is TimerSessionStep.WorkStep -> TimerViewState.WorkNominal(
@@ -97,8 +96,7 @@ class TimerSessionMapper @Inject constructor(
                 )
                 is TimerSessionStep.PrepareStep -> {
                     if (countDown == null) {
-                        hiitLogger.e("TimerSessionMapper", "buildStateWholeSession::currentStep = $currentStep")
-                        TimerViewState.Error("LAUNCH_SESSION")
+                        TimerViewState.Error("The countdown length is shorter than the prepare step?")
                     } else {
                         TimerViewState.InitialCountDown(countDown = countDown)
                     }

@@ -35,6 +35,12 @@ fun TimerScreen(
         Button(onClick = { viewModel.startUseCaseTimerV1WholeSessionLong() }) {
             Text(text = "launch V1 whole session LONG")
         }
+        Button(onClick = { viewModel.startUseCaseTimerV2WholeSessionShort() }) {
+            Text(text = "launch V2 whole session SHORT")
+        }
+        Button(onClick = { viewModel.startUseCaseTimerV2WholeSessionLong() }) {
+            Text(text = "launch V2 whole session LONG")
+        }
         Spacer(modifier = Modifier.height(64.dp))
         when (screenViewState) {
             TimerViewState.Loading -> {

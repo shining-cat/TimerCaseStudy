@@ -148,12 +148,25 @@ class TimerSateViewModel @Inject constructor(
         setupWholeTicker(stepTimerUseCaseV1)
         launchWholeSession(stepTimerUseCaseV1)
     }
+    fun startUseCaseTimerV2WholeSessionShort() {
+        sessionStartTimestamp = System.currentTimeMillis()
+        logDriftAnalysis("startViewModelTimer")
+        setupWholeTicker(stepTimerUseCaseV2)
+        launchWholeSession(stepTimerUseCaseV2)
+    }
     fun startUseCaseTimerV1WholeSessionLong() {
         session = TestTimerSessionProvider().getTestTimerSessionLong()
         sessionStartTimestamp = System.currentTimeMillis()
         logDriftAnalysis("startViewModelTimer")
         setupWholeTicker(stepTimerUseCaseV1)
         launchWholeSession(stepTimerUseCaseV1)
+    }
+    fun startUseCaseTimerV2WholeSessionLong() {
+        session = TestTimerSessionProvider().getTestTimerSessionLong()
+        sessionStartTimestamp = System.currentTimeMillis()
+        logDriftAnalysis("startViewModelTimer")
+        setupWholeTicker(stepTimerUseCaseV2)
+        launchWholeSession(stepTimerUseCaseV2)
     }
 
     private fun setupWholeTicker(stepTimerUseCase: StepTimerUseCase) {
