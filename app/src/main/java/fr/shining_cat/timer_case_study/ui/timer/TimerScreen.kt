@@ -1,10 +1,7 @@
 package fr.shining_cat.timer_case_study.ui.timer
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -29,17 +26,29 @@ fun TimerScreen(
         Button(onClick = { viewModel.startUseCaseTimerV2() }) {
             Text(text = "launch V2")
         }
+        Button(onClick = { viewModel.startUseCaseTimerV3() }) {
+            Text(text = "launch V3")
+        }
+        Divider(Modifier.height(1.dp))
         Button(onClick = { viewModel.startUseCaseTimerV1WholeSessionShort() }) {
             Text(text = "launch V1 whole session SHORT")
         }
         Button(onClick = { viewModel.startUseCaseTimerV1WholeSessionLong() }) {
             Text(text = "launch V1 whole session LONG")
         }
+        Divider(Modifier.height(1.dp))
         Button(onClick = { viewModel.startUseCaseTimerV2WholeSessionShort() }) {
             Text(text = "launch V2 whole session SHORT")
         }
         Button(onClick = { viewModel.startUseCaseTimerV2WholeSessionLong() }) {
             Text(text = "launch V2 whole session LONG")
+        }
+        Divider(Modifier.height(1.dp))
+        Button(onClick = { viewModel.startUseCaseTimerV3WholeSessionShort() }) {
+            Text(text = "launch V3 whole session SHORT")
+        }
+        Button(onClick = { viewModel.startUseCaseTimerV3WholeSessionLong() }) {
+            Text(text = "launch V3 whole session LONG")
         }
         Spacer(modifier = Modifier.height(64.dp))
         when (screenViewState) {
@@ -58,6 +67,7 @@ fun TimerScreen(
                 screenViewState.countDown.progress
             )
             is TimerViewState.RestNominal -> StepComponent(
+                "REST",
                 screenViewState.stepRemainingTime,
                 screenViewState.stepProgress,
                 screenViewState.totalRemainingTime,
@@ -65,6 +75,7 @@ fun TimerScreen(
                 screenViewState.countDown
             )
             is TimerViewState.WorkNominal -> StepComponent(
+                "WORK",
                 screenViewState.stepRemainingTime,
                 screenViewState.stepProgress,
                 screenViewState.totalRemainingTime,
@@ -77,6 +88,7 @@ fun TimerScreen(
 
 @Composable
 fun StepComponent(
+    type: String,
     stepSeconds: String,
     stepProgress: Float,
     totalSeconds: String,
@@ -86,7 +98,7 @@ fun StepComponent(
     Column(
         Modifier.fillMaxWidth()
     ) {
-        Text(text = "Step: $stepSeconds")
+        Text(text = "$type : $stepSeconds")
         LinearProgressIndicator(progress = stepProgress)
         Spacer(modifier = Modifier.height(32.dp))
         Text(text = "Total: $totalSeconds")

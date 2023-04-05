@@ -9,6 +9,7 @@ import fr.shining_cat.timer_case_study.domain.models.TimerSession
 import fr.shining_cat.timer_case_study.domain.usecases.StepTimerUseCase
 import fr.shining_cat.timer_case_study.domain.usecases.StepTimerUseCaseV1
 import fr.shining_cat.timer_case_study.domain.usecases.StepTimerUseCaseV2
+import fr.shining_cat.timer_case_study.domain.usecases.StepTimerUseCaseV3
 import fr.shining_cat.timer_case_study.utils.HiitLogger
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -20,6 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class TimerSateViewModel @Inject constructor(
     private val mapper: TimerSessionMapper,
+    private val stepTimerUseCaseV3: StepTimerUseCaseV3,
     private val stepTimerUseCaseV2: StepTimerUseCaseV2,
     private val stepTimerUseCaseV1: StepTimerUseCaseV1,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
@@ -70,6 +72,12 @@ class TimerSateViewModel @Inject constructor(
         logDriftAnalysis("startViewModelTimer")
         setupTicker(stepTimerUseCaseV2)
         launchSessionStep(stepTimerUseCaseV2)
+    }
+    fun startUseCaseTimerV3() {
+        sessionStartTimestamp = System.currentTimeMillis()
+        logDriftAnalysis("startViewModelTimer")
+        setupTicker(stepTimerUseCaseV3)
+        launchSessionStep(stepTimerUseCaseV3)
     }
 
     private fun setupTicker(stepTimerUseCase: StepTimerUseCase) {
@@ -154,6 +162,12 @@ class TimerSateViewModel @Inject constructor(
         setupWholeTicker(stepTimerUseCaseV2)
         launchWholeSession(stepTimerUseCaseV2)
     }
+    fun startUseCaseTimerV3WholeSessionShort() {
+        sessionStartTimestamp = System.currentTimeMillis()
+        logDriftAnalysis("startViewModelTimer")
+        setupWholeTicker(stepTimerUseCaseV3)
+        launchWholeSession(stepTimerUseCaseV3)
+    }
     fun startUseCaseTimerV1WholeSessionLong() {
         session = TestTimerSessionProvider().getTestTimerSessionLong()
         sessionStartTimestamp = System.currentTimeMillis()
@@ -167,6 +181,14 @@ class TimerSateViewModel @Inject constructor(
         logDriftAnalysis("startViewModelTimer")
         setupWholeTicker(stepTimerUseCaseV2)
         launchWholeSession(stepTimerUseCaseV2)
+    }
+    fun startUseCaseTimerV3WholeSessionLong() {
+        session = TestTimerSessionProvider().getTestTimerSessionLong()
+        hiitLogger.d("TimerSateViewModel", "session = $session")
+        sessionStartTimestamp = System.currentTimeMillis()
+        logDriftAnalysis("startViewModelTimer")
+        setupWholeTicker(stepTimerUseCaseV3)
+        launchWholeSession(stepTimerUseCaseV3)
     }
 
     private fun setupWholeTicker(stepTimerUseCase: StepTimerUseCase) {
@@ -193,7 +215,7 @@ class TimerSateViewModel @Inject constructor(
         val currentStep = session.steps[currentSessionStepIndex]
         val sessionRemainingSeconds = stepTimerState.secondsRemaining
         logDriftAnalysis("remainingSeconds = $sessionRemainingSeconds TICK ${currentStep::class.java.simpleName}")
-        hiitLogger.d("TimerSateViewModel", "tickWhole: remainingSeconds = ${sessionRemainingSeconds} ")
+        hiitLogger.d("TimerSateViewModel", "tickWhole: sessionRemainingSeconds = $sessionRemainingSeconds - ${currentStep::class.java.simpleName}")
         if (sessionRemainingSeconds == 0) {//whole session end
             if (session.steps.lastOrNull() == currentStep) {
                 hiitLogger.d("TimerSateViewModel", "tickWhole: SESSION FINISHED, current step is LAST")
@@ -203,8 +225,9 @@ class TimerSateViewModel @Inject constructor(
             }
         } else {//build current running step state and emit
             val timeRemainingTriggerNextStep = currentStep.remainingSessionDurationSecondsAfterMe
+            hiitLogger.d("TimerSateViewModel", "tickWhole: timeRemainingTriggerNextStep = $timeRemainingTriggerNextStep")
             if(sessionRemainingSeconds <= timeRemainingTriggerNextStep){
-                hiitLogger.d("TimerSateViewModel", "tickWhole: step ${currentStep} has ended, incrementing currentSessionStepIndex")
+                hiitLogger.d("TimerSateViewModel", "tickWhole: step $currentStep has ended, incrementing currentSessionStepIndex")
                 currentSessionStepIndex += 1
             }
             viewModelScope.launch {

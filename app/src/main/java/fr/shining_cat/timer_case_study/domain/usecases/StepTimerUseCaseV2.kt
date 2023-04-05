@@ -41,7 +41,7 @@ class StepTimerUseCaseV2 @Inject constructor(
 
     private fun initTimer(totalSeconds: Int): Flow<StepTimerState> =
         ((totalSeconds - 1).times(timerHeartBeatRatio) downTo 0).asFlow() // first emit total - 1 because the total is emitted by onStart
-            .onEach { delay(oneSecondAsMs.div(timerHeartBeatRatio)) } // internal heartbeat of 1ms
+            .onEach { delay(oneSecondAsMs.div(timerHeartBeatRatio)) } // internal heartbeat of oneSecondAsMs/timerHeartBeatRatio
             .conflate() // In case the operation in onTransform takes some time, conflate keeps the time ticking separately
             .onEach { delay(oneSecondAsMs) }//only collect and reemit every second
             .onStart {
