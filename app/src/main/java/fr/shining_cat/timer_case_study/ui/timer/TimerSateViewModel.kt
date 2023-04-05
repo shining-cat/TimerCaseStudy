@@ -60,6 +60,10 @@ class TimerSateViewModel @Inject constructor(
         )
     }
 
+    fun stop(){
+        stepTimerJob?.cancel()
+    }
+
     fun startUseCaseTimerV1() {
         sessionStartTimestamp = System.currentTimeMillis()
         logDriftAnalysis("startViewModelTimer")
