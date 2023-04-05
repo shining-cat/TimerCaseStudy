@@ -30,7 +30,7 @@ class StepTimerUseCaseV3 @Inject constructor(
         )
         return withContext(timerDispatcher) {
             loggingTimestamp = System.currentTimeMillis()
-            initTimer(totalSeconds)
+            initTimer(totalSeconds)//any work done in that Flow will be cancelled if the coroutine is cancelled
                 .collect {
                     hiitLogger.d(
                         "Ste{pTimerUseCaseV3",
@@ -44,7 +44,6 @@ class StepTimerUseCaseV3 @Inject constructor(
     private val oneSecondAsMs: Long = 1000L
 
     private fun initTimer(totalSeconds: Int): Flow<StepTimerState> = flow {
-        //TODO: we need a way to kill that work when calling coroutine is cancelled!
         hiitLogger.d("StepTimerUseCaseV3", "initTimer:: totalSeconds $totalSeconds")
         stepStartTimeStamp = System.currentTimeMillis()
         val expectedEndTimeMillis = stepStartTimeStamp + totalSeconds.times(oneSecondAsMs)
