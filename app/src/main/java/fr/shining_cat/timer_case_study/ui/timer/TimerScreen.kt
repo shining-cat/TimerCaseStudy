@@ -1,6 +1,8 @@
 package fr.shining_cat.timer_case_study.ui.timer
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -19,6 +21,7 @@ fun TimerScreen(
         Modifier
             .padding(64.dp)
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
     ) {
         Button(onClick = { viewModel.startUseCaseTimerV1() }) {
             Text(text = "launch V1")
@@ -101,7 +104,7 @@ fun StepComponent(
     countDown: CountDown?
 ) {
     Column(
-        Modifier.fillMaxWidth()
+        Modifier.fillMaxWidth().height(150.dp)
     ) {
         Text(text = "$type : $stepSeconds")
         LinearProgressIndicator(progress = stepProgress)
